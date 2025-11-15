@@ -289,41 +289,25 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     st.markdown("---")
     
     # Allocation breakdown
-    col1, col2 = st.columns(2)
+    st.markdown("#### 📊 Κατανομή Χρημάτων")
     
-    with col1:
-        st.markdown("#### 📊 Κατανομή Χρημάτων")
-        
-        fig_pie = px.pie(
-            values=[allocation['monada'], allocation['vr']],
-            names=['Ειδική Μονάδα', 'VR Εξοπλισμός'],
-            color_discrete_sequence=['#10B981', '#3B82F6'],
-            hole=0.4
-        )
-        fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-        st.plotly_chart(fig_pie, use_container_width=True)
-        
-        # Percentages
-        monada_pct = (allocation['monada'] / total_revenue * 100) if total_revenue > 0 else 0
-        vr_pct = (allocation['vr'] / total_revenue * 100) if total_revenue > 0 else 0
-        
-        st.write(f"• Ειδική Μονάδα: **{allocation['monada']:.2f}€** ({monada_pct:.1f}%)")
-        st.write(f"• VR Εξοπλισμός: **{allocation['vr']:.2f}€** ({vr_pct:.1f}%)")
+    fig_pie = px.pie(
+        values=[allocation['monada'], allocation['vr']],
+        names=['Ειδική Μονάδα', 'VR Εξοπλισμός'],
+        color_discrete_sequence=['#10B981', '#3B82F6'],
+        hole=0.4
+    )
+    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    st.plotly_chart(fig_pie, use_container_width=True)
     
-    with col2:
-        st.markdown("#### 📝 Πρόσφατες Εισπράξεις")
-        
-        if school_data['transactions']:
-            df = pd.DataFrame(school_data['transactions'])
-            df['date'] = pd.to_datetime(df['date'])
-            df = df.sort_values('date', ascending=False).head(5)
-            
-            for _, row in df.iterrows():
-                st.write(f"💰 **{row['amount']:.2f}€** - {row['source']}")
-                st.caption(f"📅 {row['date'].strftime('%d/%m/%Y')}")
-                st.markdown("---")
-        else:
-            st.info("Δεν υπάρχουν εισπράξεις ακόμα")
+    # Percentages
+    monada_pct = (allocation['monada'] / total_revenue * 100) if total_revenue > 0 else 0
+    vr_pct = (allocation['vr'] / total_revenue * 100) if total_revenue > 0 else 0
+    
+    st.write(f"• Ειδική Μονάδα: **{allocation['monada']:.2f}€** ({monada_pct:.1f}%)")
+    st.write(f"• VR Εξοπλισμός: **{allocation['vr']:.2f}€** ({vr_pct:.1f}%)")
+    
+    st.markdown("---")
     
     # Full transaction history
     st.markdown("### 📋 Πλήρες Ιστορικό Συναλλαγών")
@@ -344,14 +328,18 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
             hide_index=True
         )
         
-        # Download CSV
-        csv = df_full.to_csv(index=False).encode('utf-8')
+        # Download Excel
+        from io import BytesIO
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df_full.to_excel(writer, index=False, sheet_name='Συναλλαγές')
+        
         st.download_button(
-            "📥 Λήψη CSV",
-            csv,
-            f"{school_name}_transactions.csv",
-            "text/csv",
-            key='download-csv'
+            "📥 Λήψη Excel",
+            buffer.getvalue(),
+            f"{school_name}_transactions.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key='download-excel'
         )
     else:
         st.info("Δεν υπάρχουν συναλλαγές")
