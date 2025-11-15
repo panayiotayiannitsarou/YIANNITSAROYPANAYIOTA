@@ -231,9 +231,8 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     with col2:
         new_amount = st.number_input(
             "Ποσό (€):",
-            min_value=0.0,
-            step=1.0,
-            format="%.2f",
+            min_value=0,
+            step=1,
             key=f'amount_{school_name}_{st.session_state[f"reset_form_{school_name}"]}'
         )
     
@@ -274,21 +273,32 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     # Metrics
     st.markdown("### 📊 Οικονομική Κατάσταση")
     
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("💰 Σύνολο Εσόδων", f"{total_revenue:.2f}€")
-    
-    with col2:
-        st.metric("❤️ Ειδική Μονάδα", f"{allocation['monada']:.2f}€", 
-                  delta=f"Στόχος: {school_data['target']}€")
-    
-    with col3:
-        st.metric("🥽 VR Εξοπλισμός", f"{allocation['vr']:.2f}€")
-    
-    with col4:
-        progress_pct = min((allocation['monada'] / school_data['target']) * 100, 100)
-        st.metric("📈 Πρόοδος Στόχου", f"{progress_pct:.0f}%")
+    if allocation['target_reached']:
+        # Target reached - show total revenue and VR equipment
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("💰 Σύνολο Εσόδων", f"{total_revenue}€")
+        
+        with col2:
+            st.metric("🥽 VR Εξοπλισμός", f"{allocation['vr']}€")
+    else:
+        # Target not reached - show full breakdown
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("💰 Σύνολο Εσόδων", f"{total_revenue}€")
+        
+        with col2:
+            st.metric("❤️ Ειδική Μονάδα", f"{allocation['monada']:.2f}€", 
+                      delta=f"Στόχος: {school_data['target']}€")
+        
+        with col3:
+            st.metric("🥽 VR Εξοπλισμός", f"{allocation['vr']:.2f}€")
+        
+        with col4:
+            progress_pct = min((allocation['monada'] / school_data['target']) * 100, 100)
+            st.metric("📈 Πρόοδος Στόχου", f"{progress_pct:.0f}%")
     
     # Target status
     if allocation['target_reached']:
@@ -299,26 +309,27 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     
     st.markdown("---")
     
-    # Allocation breakdown
-    st.markdown("#### 📊 Κατανομή Χρημάτων")
-    
-    fig_pie = px.pie(
-        values=[allocation['monada'], allocation['vr']],
-        names=['Ειδική Μονάδα', 'VR Εξοπλισμός'],
-        color_discrete_sequence=['#10B981', '#3B82F6'],
-        hole=0.4
-    )
-    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-    st.plotly_chart(fig_pie, use_container_width=True)
-    
-    # Percentages
-    monada_pct = (allocation['monada'] / total_revenue * 100) if total_revenue > 0 else 0
-    vr_pct = (allocation['vr'] / total_revenue * 100) if total_revenue > 0 else 0
-    
-    st.write(f"• Ειδική Μονάδα: **{allocation['monada']:.2f}€** ({monada_pct:.1f}%)")
-    st.write(f"• VR Εξοπλισμός: **{allocation['vr']:.2f}€** ({vr_pct:.1f}%)")
-    
-    st.markdown("---")
+    # Allocation breakdown - only show if target NOT reached
+    if not allocation['target_reached']:
+        st.markdown("#### 📊 Κατανομή Χρημάτων")
+        
+        fig_pie = px.pie(
+            values=[allocation['monada'], allocation['vr']],
+            names=['Ειδική Μονάδα', 'VR Εξοπλισμός'],
+            color_discrete_sequence=['#10B981', '#3B82F6'],
+            hole=0.4
+        )
+        fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+        st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # Percentages
+        monada_pct = (allocation['monada'] / total_revenue * 100) if total_revenue > 0 else 0
+        vr_pct = (allocation['vr'] / total_revenue * 100) if total_revenue > 0 else 0
+        
+        st.write(f"• Ειδική Μονάδα: **{allocation['monada']:.2f}€** ({monada_pct:.1f}%)")
+        st.write(f"• VR Εξοπλισμός: **{allocation['vr']:.2f}€** ({vr_pct:.1f}%)")
+        
+        st.markdown("---")
     
     # Full transaction history
     st.markdown("### 📋 Πλήρες Ιστορικό Συναλλαγών")
@@ -342,13 +353,14 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
         # Download Excel
         from io import BytesIO
         buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df_full.to_excel(writer, index=False, sheet_name='Συναλλαγές')
+        
+        # Use openpyxl engine - works better on Streamlit Cloud
+        df_full.to_excel(buffer, index=False, sheet_name='Συναλλαγές', engine='openpyxl')
         buffer.seek(0)
         
         st.download_button(
             "📥 Λήψη Excel",
-            buffer,
+            buffer.getvalue(),
             f"{school_name}_transactions.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key='download-excel'
