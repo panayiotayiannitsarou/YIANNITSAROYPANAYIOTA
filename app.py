@@ -182,8 +182,7 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
         st.session_state.schools_data[school_name] = {
             "target": 100,
             "transactions": [],
-            "last_update": datetime.now().strftime('%Y-%m-%d'),
-            "created_by": school_code
+            "last_update": datetime.now().strftime('%Y-%m-%d')
         }
     
     school_data = st.session_state.schools_data[school_name]
