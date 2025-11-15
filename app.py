@@ -232,7 +232,7 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
         new_amount = st.number_input(
             "Ποσό (€):",
             min_value=0.0,
-            step=5.0,
+            step=1.0,
             format="%.2f",
             key=f'amount_{school_name}_{st.session_state[f"reset_form_{school_name}"]}'
         )
