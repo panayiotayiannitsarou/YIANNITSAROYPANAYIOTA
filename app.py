@@ -302,6 +302,7 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     
     # Target status
     if allocation['target_reached']:
+        st.balloons()  # 🎈 Animation!
         st.markdown('<div class="success-box">🎉 ΣΤΟΧΟΣ ΕΠΙΤΕΥΧΘΗΚΕ! Όλα τα νέα έσοδα πάνε σε VR εξοπλισμό!</div>', unsafe_allow_html=True)
     else:
         remaining = school_data['target'] - allocation['monada']
@@ -350,20 +351,15 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
             hide_index=True
         )
         
-        # Download Excel
-        from io import BytesIO
-        buffer = BytesIO()
-        
-        # Use openpyxl engine - works better on Streamlit Cloud
-        df_full.to_excel(buffer, index=False, sheet_name='Συναλλαγές', engine='openpyxl')
-        buffer.seek(0)
+        # Download CSV
+        csv = df_full.to_csv(index=False).encode('utf-8-sig')  # utf-8-sig for proper Greek characters
         
         st.download_button(
-            "📥 Λήψη Excel",
-            buffer.getvalue(),
-            f"{school_name}_transactions.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key='download-excel'
+            "📥 Λήψη CSV",
+            csv,
+            f"{school_name}_transactions.csv",
+            "text/csv",
+            key='download-csv'
         )
     else:
         st.info("Δεν υπάρχουν συναλλαγές")
