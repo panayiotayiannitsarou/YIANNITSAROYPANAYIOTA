@@ -31,7 +31,7 @@ def init_session_state():
             "Λύκειο Γιαννάκη Ταλιώτη, Πάφος": {
                 "target": 200,  # Στόχος Μονάδας
                 "transactions": [
-                    {'date': '2025-11-15', 'amount': 45, 'source': 'Συνεισφορές μαθητών'},
+                    {'date': '2025-11-15', 'amount': 45, 'source': 'Συνεισφορές'},
                     {'date': '2025-11-10', 'amount': 150, 'source': 'Workshop'},
                 ],
                 "last_update": "2025-11-15",
@@ -231,7 +231,7 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     with col1:
         new_source = st.text_input(
             "Πηγή εσόδου:",
-            placeholder="π.χ. Συνεισφορές μαθητών, Workshop, Sponsor"
+            placeholder="π.χ. Συνεισφορές, Workshop, Sponsor"
         )
     
     with col2:
