@@ -331,12 +331,13 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
         # Download Excel
         from io import BytesIO
         buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df_full.to_excel(writer, index=False, sheet_name='Συναλλαγές')
+        buffer.seek(0)
         
         st.download_button(
             "📥 Λήψη Excel",
-            buffer.getvalue(),
+            buffer,
             f"{school_name}_transactions.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key='download-excel'
