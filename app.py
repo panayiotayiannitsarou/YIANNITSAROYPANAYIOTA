@@ -27,17 +27,7 @@ SCHOOL_CODES = {
 def init_session_state():
     """Αρχικοποίηση session state"""
     if 'schools_data' not in st.session_state:
-        st.session_state.schools_data = {
-            "Λύκειο Γιαννάκη Ταλιώτη, Πάφος": {
-                "target": 200,  # Στόχος Μονάδας
-                "transactions": [
-                    {'date': '2025-11-15', 'amount': 45, 'source': 'Συνεισφορές'},
-                    {'date': '2025-11-10', 'amount': 150, 'source': 'Workshop'},
-                ],
-                "last_update": "2025-11-15",
-                "created_by": "Demo"
-            }
-        }
+        st.session_state.schools_data = {}
     
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
