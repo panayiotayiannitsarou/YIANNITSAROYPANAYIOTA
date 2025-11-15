@@ -215,12 +215,17 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
     
     st.markdown("### 💰 Καταχώριση Νέας Είσπραξης")
     
+    # Initialize form reset trigger
+    if f'reset_form_{school_name}' not in st.session_state:
+        st.session_state[f'reset_form_{school_name}'] = 0
+    
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
         new_source = st.text_input(
             "Πηγή εσόδου:",
-            placeholder="π.χ. Συνεισφορές, Workshop, Sponsor"
+            placeholder="π.χ. Συνεισφορές, Workshop, Sponsor",
+            key=f'source_{school_name}_{st.session_state[f"reset_form_{school_name}"]}'
         )
     
     with col2:
@@ -228,23 +233,29 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
             "Ποσό (€):",
             min_value=0.0,
             step=5.0,
-            format="%.2f"
+            format="%.2f",
+            key=f'amount_{school_name}_{st.session_state[f"reset_form_{school_name}"]}'
         )
     
     with col3:
         new_date = st.date_input(
             "Ημερομηνία:",
-            value=datetime.now()
+            value=datetime.now(),
+            key=f'date_{school_name}_{st.session_state[f"reset_form_{school_name}"]}'
         )
     
     if st.button("➕ Προσθήκη Είσπραξης", type="primary", use_container_width=True):
-        if new_amount > 0 and new_source:
+        if new_amount > 0 and new_source.strip():
             st.session_state.schools_data[school_name]['transactions'].append({
                 'date': new_date.strftime('%Y-%m-%d'),
                 'amount': new_amount,
                 'source': new_source
             })
             st.session_state.schools_data[school_name]['last_update'] = datetime.now().strftime('%Y-%m-%d')
+            
+            # Increment reset counter to create new widget keys (this clears the form)
+            st.session_state[f'reset_form_{school_name}'] += 1
+            
             st.success(f"✅ Προστέθηκε: {new_amount}€ από {new_source}")
             st.rerun()
         else:
