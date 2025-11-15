@@ -429,29 +429,16 @@ else:
                 progress = min((allocation['monada'] / school_data['target']) * 100, 100)
                 st.metric("📈 Πρόοδος", f"{progress:.0f}%")
             
-            # Charts
-            col1, col2 = st.columns(2)
+            # Progress section only
+            st.markdown("#### 🎯 Στόχος Μονάδας")
+            st.progress(min(allocation['monada'] / school_data['target'], 1.0))
+            st.write(f"**{allocation['monada']:.2f}€** από **{school_data['target']}€**")
             
-            with col1:
-                st.markdown("#### 📊 Κατανομή")
-                fig_pie = px.pie(
-                    values=[allocation['monada'], allocation['vr']],
-                    names=['Ειδική Μονάδα', 'VR Εξοπλισμός'],
-                    color_discrete_sequence=['#10B981', '#3B82F6'],
-                    hole=0.4
-                )
-                st.plotly_chart(fig_pie, use_container_width=True)
-            
-            with col2:
-                st.markdown("#### 🎯 Στόχος Μονάδας")
-                st.progress(min(allocation['monada'] / school_data['target'], 1.0))
-                st.write(f"**{allocation['monada']:.2f}€** από **{school_data['target']}€**")
-                
-                if allocation['target_reached']:
-                    st.success("✅ Στόχος επιτεύχθηκε!")
-                else:
-                    remaining = school_data['target'] - allocation['monada']
-                    st.info(f"Υπολείπονται: {remaining:.2f}€")
+            if allocation['target_reached']:
+                st.success("✅ Στόχος επιτεύχθηκε!")
+            else:
+                remaining = school_data['target'] - allocation['monada']
+                st.info(f"Υπολείπονται: {remaining:.2f}€")
 
 # ═══════════════════════════════════════════════════════════
 # 📌 FOOTER
