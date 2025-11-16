@@ -417,7 +417,7 @@ else:
             allocation = calculate_allocation(total_revenue, school_data['target'])
             
             # Metrics
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 st.metric("💰 Σύνολο Εσόδων", f"{total_revenue:.2f}€")
@@ -427,10 +427,6 @@ else:
             
             with col3:
                 st.metric("🥽 VR Εξοπλισμός", f"{allocation['vr']:.2f}€")
-            
-            with col4:
-                progress = min((allocation['monada'] / school_data['target']) * 100, 100)
-                st.metric("📈 Πρόοδος", f"{progress:.0f}%")
             
             # Progress section only
             st.markdown("#### 🎯 Στόχος Μονάδας")
