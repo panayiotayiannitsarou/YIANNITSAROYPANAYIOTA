@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-import hashlib
+import json
+import os
+from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════
 # 🔐 AUTHENTICATION & SCHOOL CODES
@@ -24,13 +26,36 @@ SCHOOL_CODES = {
 }
 
 # ═══════════════════════════════════════════════════════════
-# 💾 DATA STORAGE (χρησιμοποιεί session_state για persistence)
+# 💾 PERSISTENT DATA STORAGE (JSON file)
 # ═══════════════════════════════════════════════════════════
+
+DATA_FILE = "schools_data.json"
+
+def load_data():
+    """Φόρτωση δεδομένων από JSON αρχείο"""
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            st.error(f"⚠️ Σφάλμα φόρτωσης δεδομένων: {e}")
+            return {}
+    return {}
+
+def save_data(data):
+    """Αποθήκευση δεδομένων σε JSON αρχείο"""
+    try:
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        st.error(f"⚠️ Σφάλμα αποθήκευσης: {e}")
+        return False
 
 def init_session_state():
     """Αρχικοποίηση session state"""
     if 'schools_data' not in st.session_state:
-        st.session_state.schools_data = {}
+        st.session_state.schools_data = load_data()
     
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
@@ -208,7 +233,10 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
         
         if st.button("💾 Αποθήκευση Στόχου"):
             st.session_state.schools_data[school_name]['target'] = new_target
-            st.success(f"✅ Στόχος ενημερώθηκε σε {new_target}€")
+            if save_data(st.session_state.schools_data):
+                st.success(f"✅ Στόχος ενημερώθηκε σε {new_target}€")
+            else:
+                st.error("❌ Σφάλμα αποθήκευσης!")
     
     st.markdown("---")
     
@@ -255,11 +283,15 @@ if st.session_state.authenticated and not st.session_state.is_super_admin:
             })
             st.session_state.schools_data[school_name]['last_update'] = datetime.now().strftime('%Y-%m-%d')
             
-            # Increment reset counter to create new widget keys (this clears the form)
-            st.session_state[f'reset_form_{school_name}'] += 1
-            
-            st.success(f"✅ Προστέθηκε: {new_amount}€ από {new_source}")
-            st.rerun()
+            # Save to file
+            if save_data(st.session_state.schools_data):
+                # Increment reset counter to create new widget keys (this clears the form)
+                st.session_state[f'reset_form_{school_name}'] += 1
+                
+                st.success(f"✅ Προστέθηκε: {new_amount}€ από {new_source}")
+                st.rerun()
+            else:
+                st.error("❌ Σφάλμα αποθήκευσης!")
         else:
             st.error("⚠️ Συμπληρώστε ποσό και πηγή!")
     
